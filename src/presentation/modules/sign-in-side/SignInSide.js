@@ -4,7 +4,7 @@ import Stack from '@mui/material/Stack';
 import SignInCard from './SignInCard';
 import Content from './Content';
 
-export default function SignInSide(props: { disableCustomTheme?: boolean }) {
+export default function SignInSide({ loginUseCase }) {
   return (
       <Stack
         direction="column"
@@ -53,7 +53,7 @@ export default function SignInSide(props: { disableCustomTheme?: boolean }) {
             }}
           >
             <Content />
-            <SignInCard />
+              <SignInCard loginUseCase={loginUseCase} />
           </Stack>
         </Stack>
       </Stack>
