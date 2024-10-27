@@ -1,3 +1,4 @@
+// src/components/SignInCard.tsx
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -10,13 +11,11 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Link from '@mui/material/Link';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { useNavigate } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
-
 import ForgotPassword from './ForgotPassword';
 import { GoogleIcon, FacebookIcon, SitemarkIcon } from './CustomIcons';
+import { useSignInViewModel } from '../ViewModel';
 
-// Custom styled Card component
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
@@ -29,69 +28,27 @@ const Card = styled(MuiCard)(({ theme }) => ({
   [theme.breakpoints.up('sm')]: {
     width: '450px',
   },
-  ...theme.applyStyles('dark', {
-    boxShadow:
-        'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
-  }),
 }));
 
 interface SignInCardProps {
-  loginUseCase: {
-    execute: (email: string, password: string) => Promise<void>;
-  };
-  validateEmailUseCase: {
-    execute: (email: string)  => boolean;
-  };
-  validatePasswordUseCase: {
-    execute: (password: string)  => boolean;
-  };
+  viewModel: ReturnType<typeof useSignInViewModel>;
 }
 
-export default function SignInCard({ loginUseCase, validateEmailUseCase, validatePasswordUseCase }: SignInCardProps) {
-  const [emailError, setEmailError] = React.useState(false);
-  const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
-  const [passwordError, setPasswordError] = React.useState(false);
-  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
-  const [open, setOpen] = React.useState(false);
+export default function SignInCard({ viewModel }: SignInCardProps) {
+  const {
+    emailError,
+    emailErrorMessage,
+    passwordError,
+    passwordErrorMessage,
+    handleLogin,
+  } = viewModel;
 
-  const navigate = useNavigate();
-
-  const handleClickOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log("Submit function called");
-    if (validateInputs()) {
-      const data = new FormData(event.currentTarget);
-      const email = data.get('email')?.toString() || '';
-      const password = data.get('password')?.toString() || '';
-
-      try {
-        await loginUseCase.execute(email, password);
-        navigate('/home');
-      } catch (error) {
-        alert('Credenciales incorrectas');
-      }
-    }
-  };
-
-  const validateInputs = () => {
-    const email = document.getElementById('email') as HTMLInputElement;
-    const password = document.getElementById('password') as HTMLInputElement;
-    let isValidEmail = validateEmailUseCase.execute(email.value)
-    let isValidPassword = validatePasswordUseCase.execute(password.value)
-    let isValid = (isValidPassword && isValidPassword);
-    setEmailError(!isValidEmail);
-    setEmailErrorMessage(isValidEmail ? '' : 'Please enter a valid email address.');
-    setPasswordError(!isValidPassword);
-    setPasswordErrorMessage(isValidPassword ? '' : 'Password must be at least 6 characters long.');
-    return isValid;
+    const data = new FormData(event.currentTarget);
+    const email = data.get('email')?.toString() || '';
+    const password = data.get('password')?.toString() || '';
+    handleLogin(email, password);
   };
 
   return (
@@ -127,19 +84,12 @@ export default function SignInCard({ loginUseCase, validateEmailUseCase, validat
                 fullWidth
                 variant="outlined"
                 color={emailError ? 'error' : 'primary'}
-                sx={{ ariaLabel: 'email' }}
             />
           </FormControl>
           <FormControl>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <FormLabel htmlFor="password">Password</FormLabel>
-              <Link
-                  component="button"
-                  type="button"
-                  onClick={handleClickOpen}
-                  variant="body2"
-                  sx={{ alignSelf: 'baseline' }}
-              >
+              <Link component="button" type="button" variant="body2">
                 Forgot your password?
               </Link>
             </Box>
@@ -151,50 +101,29 @@ export default function SignInCard({ loginUseCase, validateEmailUseCase, validat
                 type="password"
                 id="password"
                 autoComplete="current-password"
-                autoFocus
                 required
                 fullWidth
                 variant="outlined"
                 color={passwordError ? 'error' : 'primary'}
             />
           </FormControl>
-          <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Remember me"
-          />
-          <ForgotPassword open={open} handleClose={handleClose} />
+          <FormControlLabel control={<Checkbox value="remember" color="primary" />} label="Remember me" />
           <Button type="submit" fullWidth variant="contained">
             Sign in
           </Button>
           <Typography sx={{ textAlign: 'center' }}>
             Don&apos;t have an account?{' '}
-            <span>
-            <Link
-                href="/material-ui/getting-started/templates/sign-in/"
-                variant="body2"
-                sx={{ alignSelf: 'center' }}
-            >
+            <Link href="/sign-up" variant="body2">
               Sign up
             </Link>
-          </span>
           </Typography>
         </Box>
         <Divider>or</Divider>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Sign in with Google')}
-              startIcon={<GoogleIcon />}
-          >
+          <Button fullWidth variant="outlined" startIcon={<GoogleIcon />}>
             Sign in with Google
           </Button>
-          <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert('Sign in with Facebook')}
-              startIcon={<FacebookIcon />}
-          >
+          <Button fullWidth variant="outlined" startIcon={<FacebookIcon />}>
             Sign in with Facebook
           </Button>
         </Box>
