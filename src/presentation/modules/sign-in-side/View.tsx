@@ -1,14 +1,20 @@
 import * as React from 'react';
 import Stack from '@mui/material/Stack';
-import SignInCard from './SignInCard';
-import Content from './Content';
-import LoginUseCase from "../../../domain/usecases/login-use-case";
+import SignInCard from './components/SignInCard';
+import Content from './components/Content';
+import LoginUseCase from "../../../domain/usecases/LoginUseCase";
+import ValidateEmailUseCase from "../../../domain/usecases/ValidateEmailUseCase";
+import ValidatePasswordUseCase from "../../../domain/usecases/ValidatePasswordUseCase";
 
 interface SignInSideProps {
     loginUseCase: LoginUseCase;
+    validateEmailUseCase: ValidateEmailUseCase;
+    validatePasswordUseCase: ValidatePasswordUseCase;
 }
 
-export default function SignInSide({ loginUseCase } : SignInSideProps) {
+export default function View({ loginUseCase,
+                                       validateEmailUseCase,
+                                       validatePasswordUseCase } : SignInSideProps){
   return (
       <Stack
         direction="column"
@@ -57,7 +63,9 @@ export default function SignInSide({ loginUseCase } : SignInSideProps) {
             }}
           >
             <Content />
-            <SignInCard loginUseCase={loginUseCase} />
+            <SignInCard loginUseCase={loginUseCase}
+                        validateEmailUseCase={validateEmailUseCase}
+                        validatePasswordUseCase={validatePasswordUseCase}/>
           </Stack>
         </Stack>
       </Stack>

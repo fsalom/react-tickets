@@ -39,9 +39,15 @@ interface SignInCardProps {
   loginUseCase: {
     execute: (email: string, password: string) => Promise<void>;
   };
+  validateEmailUseCase: {
+    execute: (email: string)  => boolean;
+  };
+  validatePasswordUseCase: {
+    execute: (password: string)  => boolean;
+  };
 }
 
-export default function SignInCard({ loginUseCase }: SignInCardProps) {
+export default function SignInCard({ loginUseCase, validateEmailUseCase, validatePasswordUseCase }: SignInCardProps) {
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
@@ -78,27 +84,13 @@ export default function SignInCard({ loginUseCase }: SignInCardProps) {
   const validateInputs = () => {
     const email = document.getElementById('email') as HTMLInputElement;
     const password = document.getElementById('password') as HTMLInputElement;
-    console.log("Submit function called");
-    let isValid = true;
-
-    if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
-      setEmailError(true);
-      setEmailErrorMessage('Please enter a valid email address.');
-      isValid = false;
-    } else {
-      setEmailError(false);
-      setEmailErrorMessage('');
-    }
-
-    if (!password.value || password.value.length < 6) {
-      setPasswordError(true);
-      setPasswordErrorMessage('Password must be at least 6 characters long.');
-      isValid = false;
-    } else {
-      setPasswordError(false);
-      setPasswordErrorMessage('');
-    }
-
+    let isValidEmail = validateEmailUseCase.execute(email.value)
+    let isValidPassword = validatePasswordUseCase.execute(password.value)
+    let isValid = (isValidPassword && isValidPassword);
+    setEmailError(!isValidEmail);
+    setEmailErrorMessage(isValidEmail ? '' : 'Please enter a valid email address.');
+    setPasswordError(!isValidPassword);
+    setPasswordErrorMessage(isValidPassword ? '' : 'Password must be at least 6 characters long.');
     return isValid;
   };
 
