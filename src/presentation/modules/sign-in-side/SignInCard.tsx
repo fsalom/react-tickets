@@ -35,7 +35,13 @@ const Card = styled(MuiCard)(({ theme }) => ({
   }),
 }));
 
-export default function SignInCard({ loginUseCase }) {
+interface SignInCardProps {
+  loginUseCase: {
+    execute: (email: string, password: string) => Promise<void>;
+  };
+}
+
+export default function SignInCard({ loginUseCase }: SignInCardProps) {
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
@@ -72,7 +78,7 @@ export default function SignInCard({ loginUseCase }) {
   const validateInputs = () => {
     const email = document.getElementById('email') as HTMLInputElement;
     const password = document.getElementById('password') as HTMLInputElement;
-
+    console.log("Submit function called");
     let isValid = true;
 
     if (!email.value || !/\S+@\S+\.\S+/.test(email.value)) {
