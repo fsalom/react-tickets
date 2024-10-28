@@ -3,9 +3,9 @@ import Stack from '@mui/material/Stack';
 import SignInCard from './components/SignInCard';
 import Content from './components/Content';
 import { useSignInViewModel } from './ViewModel';
-import LoginUseCase from "../../../domain/usecases/LoginUseCase";
-import ValidateEmailUseCase from "../../../domain/usecases/ValidateEmailUseCase";
-import ValidatePasswordUseCase from "../../../domain/usecases/ValidatePasswordUseCase";
+import LoginUseCase from "../../../domain/usecases/authentication/LoginUseCase";
+import ValidateEmailUseCase from "../../../domain/usecases/validation/ValidateEmailUseCase";
+import ValidatePasswordUseCase from "../../../domain/usecases/validation/ValidatePasswordUseCase";
 import AuthRepositoryImpl from "../../../data/repositories/AuthRepositoryImpl";
 
 export default function SignInSideView() {

@@ -1,13 +1,8 @@
-import SignInSide from './modules/sign-in-side/SignInSide';
 import './App.css';
 import '@fontsource/roboto';
 import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
-import AuthRepositoryImpl from "../data/repositories/auth-repository-impl";
-import LoginUseCase from "../domain/usecases/login-use-case";
-import AppTheme from "../AppTheme";
-
-const authRepository = new AuthRepositoryImpl();
-const loginUseCase = new LoginUseCase(authRepository);
+import AppTheme from "./theme/AppTheme";
+import SignInSideView from "./pages/sign-in-side/View";
 
 function App() {
   return (
@@ -16,7 +11,7 @@ function App() {
               <Routes>
                   <Route
                       path="/login"
-                      element={<SignInSide loginUseCase={loginUseCase} />}
+                      element={<SignInSideView />}
                   />
                   <Route
                       path="/home"
