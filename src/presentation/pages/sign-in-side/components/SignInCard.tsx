@@ -123,9 +123,6 @@ export default function SignInCard({ viewModel }: SignInCardProps) {
           <Button fullWidth variant="outlined" startIcon={<GoogleIcon />}>
             Sign in with Google
           </Button>
-          <Button fullWidth variant="outlined" startIcon={<FacebookIcon />}>
-            Sign in with Facebook
-          </Button>
         </Box>
       </Card>
   );
