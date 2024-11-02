@@ -8,6 +8,6 @@ export default class RegisterUseCase {
     }
 
     execute(email: string, password: string, name: string): Promise<any> {
-        return this.authRepository.login(email, password);
+        return this.authRepository.register(email, password, name);
     }
 }

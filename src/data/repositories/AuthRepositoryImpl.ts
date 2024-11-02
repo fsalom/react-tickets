@@ -14,6 +14,16 @@ export default class AuthRepositoryImpl implements AuthRepository {
         }
     }
 
+    async register(email: string, password: string, name: string): Promise<void> {
+        try {
+            const response = await AuthAPI.login(email, password);
+            const user = new User(email, response.token);
+            localStorage.setItem('user', JSON.stringify(user));
+        } catch (error) {
+            throw new Error('Login failed');
+        }
+    }
+
     isAuthenticated(): boolean {
         const user = localStorage.getItem('user');
         return user !== null && JSON.parse(user) !== null;
