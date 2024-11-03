@@ -1,14 +1,18 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { ContentType, HTTPMethod } from './entity/Types';
-import { Endpoint } from './entity/Endpoint';
+import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
+import {ContentType} from './entity/Types';
+import {Endpoint} from './entity/Endpoint';
+import {Storage} from './storage/Storage'
+import {TokenType} from "./storage/TokenType";
 
 export class Moshimoshi {
     baseURL: string;
     instance: AxiosInstance;
+    storage: Storage;
 
-    constructor(baseURL: string) {
+    constructor(baseURL: string, storage: Storage) {
         this.baseURL = baseURL;
         this.instance = axios.create({ baseURL: this.baseURL });
+        this.storage = storage;
 
         this.instance.interceptors.response.use(
             (response: AxiosResponse) => response,
@@ -18,11 +22,31 @@ export class Moshimoshi {
 
     private async handleResponseError(error: any) {
         if (error.response && error.response.status === 401) {
-            console.warn('No autorizado: Redirigiendo al inicio de sesión');
-            // Aquí puedes redirigir al usuario o intentar renovar el token
-            // Por ejemplo: window.location.href = '/login';
+            console.warn('Token expirado: Intentando renovar el token');
+            const newToken = await this.refreshToken();
+
+            if (newToken) {
+                error.config.headers['Authorization'] = `Bearer ${newToken}`;
+                return this.instance.request(error.config);
+            } else {
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
+    }
+
+    private async refreshToken() {
+        try {
+            const response = await axios.post(`${this.baseURL}/auth/refresh`, {
+                refreshToken: this.storage.retrieve(TokenType.REFRESH),
+            });
+            const newToken = response.data.accessToken;
+            this.storage.save(newToken, TokenType.ACCESS)
+            return newToken;
+        } catch (error) {
+            console.error('Error renovando token:', error);
+            return null;
+        }
     }
 
     async request(endpoint: Endpoint) {
