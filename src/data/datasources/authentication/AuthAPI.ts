@@ -12,4 +12,17 @@ export default class AuthAPI {
         }
         throw new Error('Invalid credentials');
     }
+
+    static async register(email: string, password: string, name: string) {
+        if (email === 'user@example.com' && password === 'password') {
+            const tokenData = {
+                value: 'fake-jwt-token',
+                expireDate: Date.now(),
+                expireInt: 3600,
+            };
+            localStorage.setItem('accessToken', JSON.stringify(tokenData));
+            localStorage.setItem('refreshToken', JSON.stringify(tokenData));
+        }
+        throw new Error('Invalid credentials');
+    }
 }
