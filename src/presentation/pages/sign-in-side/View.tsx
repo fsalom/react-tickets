@@ -7,9 +7,13 @@ import LoginUseCase from "../../../domain/usecases/authentication/LoginUseCase";
 import ValidateEmailUseCase from "../../../domain/usecases/validation/ValidateEmailUseCase";
 import ValidatePasswordUseCase from "../../../domain/usecases/validation/ValidatePasswordUseCase";
 import AuthRepositoryImpl from "../../../data/repositories/AuthRepositoryImpl";
+import AuthAPIDataSourceImpl from "../../../data/datasources/authentication/remote/AuthAPIDataSourceImpl";
+import {Config} from "../../../config";
 
 export default function SignInSideView() {
-    const authRepository = new AuthRepositoryImpl();
+    const moshimoshi =  Config.getInstance().moshimoshi
+    const authDataSource= new AuthAPIDataSourceImpl(moshimoshi)
+    const authRepository = new AuthRepositoryImpl(authDataSource);
     const loginUseCase = new LoginUseCase(authRepository);
     const validateEmailUseCase = new ValidateEmailUseCase();
     const validatePasswordUseCase = new ValidatePasswordUseCase();

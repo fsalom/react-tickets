@@ -19,6 +19,9 @@ import RegisterUseCase from "../../../domain/usecases/authentication/RegisterUse
 import ValidateEmailUseCase from "../../../domain/usecases/validation/ValidateEmailUseCase";
 import ValidatePasswordUseCase from "../../../domain/usecases/validation/ValidatePasswordUseCase";
 import ValidateNameUseCase from "../../../domain/usecases/validation/ValidateNameUseCase";
+import {Config} from "../../../config";
+import AuthAPIDataSourceImpl from "../../../data/datasources/authentication/remote/AuthAPIDataSourceImpl";
+import LoginUseCase from "../../../domain/usecases/authentication/LoginUseCase";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -45,7 +48,9 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignUpView() {
-  const authRepository = new AuthRepositoryImpl();
+  const moshimoshi =  Config.getInstance().moshimoshi
+  const authDataSource= new AuthAPIDataSourceImpl(moshimoshi)
+  const authRepository = new AuthRepositoryImpl(authDataSource);
   const registerUseCase = new RegisterUseCase(authRepository);
   const validateEmailUseCase = new ValidateEmailUseCase();
   const validatePasswordUseCase = new ValidatePasswordUseCase();
