@@ -1,9 +1,5 @@
 import {AuthDataSource} from "../AuthDataSource";
-import {Error} from "@mui/icons-material";
-import User from "../../../../domain/entities/User";
 import {Moshimoshi} from "../../../../_moshimoshi/Moshimoshi";
-import {Endpoint} from "../../../../_moshimoshi/entity/Endpoint";
-import {HTTPMethod} from "../../../../_moshimoshi/entity/Types";
 
 export default class AuthAPIDataSourceImpl implements AuthDataSource {
     private client: Moshimoshi;
@@ -12,17 +8,14 @@ export default class AuthAPIDataSourceImpl implements AuthDataSource {
         this.client = client;
     }
 
-    async login(email: string, password: string): Promise<User> {
+    async login(email: string, password: string): Promise<void> {
         try {
-            const getUserEndpoint = new Endpoint({
-                path: '/users/:id',
-                httpMethod: HTTPMethod.GET,
-                parameters: {id: 1},
-                query: {includePosts: true},
-            });
-            const response = await this.client.request(getUserEndpoint)
-            const user = new User(email, "");
-            return user;
+            const data = {
+                username: email,
+                password: password,
+                client_id: "J7DB96nvUAiRCsllouT1zu8inOUsnjObqS1t7TGs"
+            }
+            await this.client.login(data)
         } catch (error) {
             throw new Error('Invalid credentials');
         }
