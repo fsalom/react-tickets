@@ -1,12 +1,18 @@
 import { AuthRepository } from '../../domain/repositories/AuthRepository';
 import User from "../../domain/entities/User";
-import AuthAPI from "../datasources/AuthAPI";
+import {AuthDataSource} from "../datasources/authentication/AuthDataSource";
 
 export default class AuthRepositoryImpl implements AuthRepository {
+    private datasource: AuthDataSource;
+
+    constructor(datasource: AuthDataSource) {
+        this.datasource = datasource;
+    }
+
     async login(email: string, password: string): Promise<User> {
         try {
-            const response = await AuthAPI.login(email, password);
-            const user = new User(email, response.token);
+            const response = await this.datasource.login(email, password);
+            const user = new User(email, "");
             localStorage.setItem('user', JSON.stringify(user));
             return user;
         } catch (error) {
@@ -16,8 +22,8 @@ export default class AuthRepositoryImpl implements AuthRepository {
 
     async register(email: string, password: string, name: string): Promise<void> {
         try {
-            const response = await AuthAPI.login(email, password);
-            const user = new User(email, response.token);
+            const response = await this.datasource.register(email, password, name);
+            const user = new User(email, "");
             localStorage.setItem('user', JSON.stringify(user));
         } catch (error) {
             throw new Error('Login failed');
