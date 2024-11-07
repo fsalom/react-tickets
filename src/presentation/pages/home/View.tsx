@@ -14,6 +14,8 @@ import {alpha} from "@mui/material/styles";
 import Stack from "@mui/material/Stack";
 import Header from "./components/Header";
 import CustomizedDataGrid from "./components/CustomizedDataGrid";
+import {Config} from "../../../config";
+import AuthAPIDataSourceImpl from "../../../data/datasources/authentication/remote/AuthAPIDataSourceImpl";
 
 const data: StatCardProps[] = [
     {
@@ -49,7 +51,9 @@ const data: StatCardProps[] = [
 ];
 
 export default function HomeView() {
-    const authRepository = new AuthRepositoryImpl();
+    const moshimoshi =  Config.getInstance().moshimoshi
+    const authDataSource= new AuthAPIDataSourceImpl(moshimoshi)
+    const authRepository = new AuthRepositoryImpl(authDataSource);
     const loginUseCase = new LoginUseCase(authRepository);
     const validateEmailUseCase = new ValidateEmailUseCase();
     const validatePasswordUseCase = new ValidatePasswordUseCase();
