@@ -1,4 +1,4 @@
-import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
+import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig} from 'axios';
 import {ContentType} from './entity/Types';
 import {Endpoint} from './entity/Endpoint';
 import {Storage} from './storage/Storage'
@@ -6,7 +6,6 @@ import {TokenType} from "./storage/TokenType";
 import {Token} from "./entity/Token";
 
 export class Moshimoshi {
-    baseURL: string;
     instance: AxiosInstance;
     storage: Storage;
     loginEndpoint: Endpoint;
@@ -14,15 +13,24 @@ export class Moshimoshi {
 
     private static instance: Moshimoshi;
 
-    private constructor(baseURL: string,
-                        storage: Storage,
+    private constructor(storage: Storage,
                         loginEndpoint: Endpoint,
                         refreshEndpoint: Endpoint) {
-        this.baseURL = baseURL;
-        this.instance = axios.create({ baseURL: this.baseURL });
+        this.instance = axios.create();
         this.storage = storage;
         this.loginEndpoint = loginEndpoint
         this.refreshEndpoint = refreshEndpoint
+
+        this.instance.interceptors.request.use(
+            (value: InternalAxiosRequestConfig<any>) => {
+            console.log('Realizando llamada a la API:');
+            console.log(`URL: ${value.url}`);
+            console.log(`Método: ${value.method}`);
+            console.log('Headers:', value.headers);
+            console.log('Parámetros:', value.params);
+            console.log('Cuerpo:', value.data);
+            return value;
+        });
 
         this.instance.interceptors.response.use(
             (response: AxiosResponse) => response,
@@ -30,13 +38,11 @@ export class Moshimoshi {
         );
     }
 
-    public static getInstance(baseURL: string,
-                              storage: Storage,
+    public static getInstance(storage: Storage,
                               loginEndpoint: Endpoint,
                               refreshEndpoint: Endpoint): Moshimoshi {
         if (!Moshimoshi.instance) {
             Moshimoshi.instance = new Moshimoshi(
-                baseURL,
                 storage,
                 loginEndpoint,
                 refreshEndpoint);
@@ -61,7 +67,7 @@ export class Moshimoshi {
 
     private async refreshToken() {
         try {
-            const response = await axios.post(`${this.baseURL}/auth/refresh`, {
+            const response = await axios.post(`/auth/refresh`, {
                 refreshToken: this.storage.retrieve(TokenType.REFRESH),
             });
             const newToken = response.data.accessToken;
@@ -131,7 +137,7 @@ export class Moshimoshi {
         for (const [key, value] of Object.entries(endpoint.parameters)) {
             path = path.replace(`:${key}`, encodeURIComponent(value));
         }
-        return `${this.baseURL}${path}`;
+        return `${path}`;
     }
 
     private buildRequest(endpoint: Endpoint): AxiosRequestConfig {
