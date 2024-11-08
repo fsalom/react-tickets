@@ -7,9 +7,9 @@ import {Token} from "./entity/Token";
 
 export class Moshimoshi {
     instance: AxiosInstance;
-    storage: Storage;
-    loginEndpoint: Endpoint;
-    refreshEndpoint: Endpoint;
+    private storage: Storage;
+    private loginEndpoint: Endpoint;
+    private refreshEndpoint: Endpoint;
 
     private static instance: Moshimoshi;
 
@@ -119,17 +119,12 @@ export class Moshimoshi {
     }
 
     private authenticate(config: AxiosRequestConfig): AxiosRequestConfig {
-        const token = this.storage.retrieve(TokenType.ACCESS);
-        if (token) {
-            config.headers = {
-                ...config.headers,
-                Authorization: `Bearer ${token}`,
-            };
-            return config;
-        } else {
-            throw new Error('Access token not found');
-            window.location.href = '/login';
-        }
+        const token = this.getAccessToken()
+        config.headers = {
+            ...config.headers,
+            Authorization: `Bearer ${token}`,
+        };
+        return config;
     }
 
     private buildURL(endpoint: Endpoint): string {
@@ -155,5 +150,32 @@ export class Moshimoshi {
             config.data = endpoint.body;
         }
         return config;
+    }
+
+    async getAccessToken(): Promise<string> {
+        try {
+            const accessToken = this.storage.retrieve(TokenType.ACCESS);
+            if (accessToken) {
+                if (accessToken.isValid) {
+                    return accessToken.value
+                } else {
+                    const refreshToken = this.storage.retrieve(TokenType.REFRESH);
+                    if (refreshToken) {
+                        await this.refreshToken();
+                        return await this.getAccessToken()
+                    } else {
+                        this.logout()
+                    }
+                }
+            }
+            throw new Error('Access token not found');
+        } catch (error) {
+            throw new Error('Access token not found');
+            window.location.href = '/login';
+        }
+    }
+
+    async logout(): Promise<void> {
+        this.storage.deleteAll()
     }
 }
