@@ -1,5 +1,5 @@
-import React, {createContext, useContext, useEffect, useState} from 'react';
-import {Moshimoshi} from "../Moshimoshi";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Moshimoshi } from "../Moshimoshi";
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -14,23 +14,19 @@ interface AuthProviderProps {
     authenticator: Moshimoshi;
 }
 
-export const AuthProvider: ({children, authenticator}: AuthProviderProps) => React.JSX.Element = ({
-                                                    children,
-                                                    authenticator,
-                                                }: AuthProviderProps) => {
+export const AuthProvider = ({ children, authenticator }: AuthProviderProps): React.JSX.Element => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
 
-    useEffect(() => {
-        authenticator.getAccessToken();
-        setIsAuthenticated(true)
+    const checkAuthStatus = async () => {
+        const accessTokenValue = await authenticator.getAccessToken();
+        setIsAuthenticated(!!accessTokenValue);
         setLoading(false);
-    }, []);
-
-    const checkAuthStatus = () => {
-        const accessTokenValue = authenticator.getAccessToken()
-        setIsAuthenticated(true);
     };
+
+    useEffect(() => {
+        checkAuthStatus();
+    }, []);
 
     return (
         <AuthContext.Provider value={{ isAuthenticated, loading, checkAuthStatus }}>
