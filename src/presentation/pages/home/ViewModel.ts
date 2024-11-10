@@ -1,74 +1,37 @@
-import { useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import {useEffect, useState} from 'react';
+import Stats from "../../../domain/entities/Stats";
+import GetStatsUseCase from "../../../domain/usecases/stats/GetStatsUseCase";
 
-interface HomeViewModelProps {
-    registerUseCase: {
-        execute: (email: string, password: string, name: string) => Promise<void>;
-    };
-    validateEmailUseCase: {
-        execute: (email: string) => boolean;
-    };
-    validatePasswordUseCase: {
-        execute: (password: string) => boolean;
-    };
-    validateNameUseCase: {
-        execute: (name: string) => boolean;
-    };
+interface StatsViewModelProps {
+    getStatsUseCase: GetStatsUseCase;
 }
 
-export const useHomeViewModel = ({
-                                       registerUseCase,
-                                       validateEmailUseCase,
-                                       validatePasswordUseCase,
-                                       validateNameUseCase,
-                                   }: HomeViewModelProps) => {
-    const [emailError, setEmailError] = useState(false);
-    const [emailErrorMessage, setEmailErrorMessage] = useState('');
-    const [passwordError, setPasswordError] = useState(false);
-    const [passwordErrorMessage, setPasswordErrorMessage] = useState('');
-    const [nameError, setNameError] = useState(false);
-    const [nameErrorMessage, setNameErrorMessage] = useState('');
-    const navigate = useNavigate();
+export const useStatsViewModel = ({
+                                       getStatsUseCase
+                                   }: StatsViewModelProps) => {
 
-    const validateInputs = (email: string, password: string, name: string): boolean => {
-        const isValidEmail = validateEmailUseCase.execute(email);
-        const isValidPassword = validatePasswordUseCase.execute(password);
-        const isValidName = validateNameUseCase.execute(name);
+    const [stats, setStats] = useState<Stats | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string>('');
 
-        setEmailError(!isValidEmail);
-        setEmailErrorMessage(isValidEmail ? '' : 'Por favor introduce un email válido.');
-        setPasswordError(!isValidPassword);
-        setPasswordErrorMessage(isValidPassword ? '' : 'Password debe tener al menos 6 carácteres de longitud.');
-        setNameError(!isValidName);
-        setNameErrorMessage(isValidPassword ? '' : 'Name es requerido.');
-
-        return isValidEmail && isValidPassword && isValidName;
-    };
-
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const formData = new FormData(event.currentTarget);
-        const email = formData.get('email') as string;
-        const password = formData.get('password') as string;
-        const name = formData.get('name') as string;
-
-        if (validateInputs(email, password, name)) {
+    useEffect(() => {
+        const fetchData = async () => {
             try {
-                await registerUseCase.execute(email, password, name);
-                navigate('/home');
+                const stats = await getStatsUseCase.execute();
+                setStats(stats);
+                setLoading(false);
             } catch (error) {
-                alert('Se ha producido un error registrando el usuario');
+                setError('Error al cargar las estadísticas de tickets');
+                setLoading(false);
             }
-        }
-    };
+        };
+
+        fetchData();
+    }, [getStatsUseCase]);
 
     return {
-        emailError,
-        emailErrorMessage,
-        passwordError,
-        passwordErrorMessage,
-        nameError,
-        nameErrorMessage,
-        handleSubmit,
+        stats,
+        loading,
+        error,
     };
 };

@@ -1,8 +1,3 @@
-import AuthRepositoryImpl from "../../../data/repositories/AuthRepositoryImpl";
-import LoginUseCase from "../../../domain/usecases/authentication/LoginUseCase";
-import ValidateEmailUseCase from "../../../domain/usecases/validation/ValidateEmailUseCase";
-import ValidatePasswordUseCase from "../../../domain/usecases/validation/ValidatePasswordUseCase";
-import {useSignInViewModel} from "../sign-in-side/ViewModel";
 import * as React from "react";
 import PageViewsBarChart from "./components/PageViewsBarChart";
 import Grid from "@mui/material/Grid2";
@@ -10,12 +5,15 @@ import StatCard, {StatCardProps} from "./components/StatCard";
 import Box from "@mui/material/Box";
 import SideMenu from "./components/SideMenu";
 import AppNavbar from "./components/AppNavbar";
-import {alpha} from "@mui/material/styles";
 import Stack from "@mui/material/Stack";
 import Header from "./components/Header";
 import CustomizedDataGrid from "./components/CustomizedDataGrid";
 import {Config} from "../../../config";
-import AuthAPIDataSourceImpl from "../../../data/datasources/authentication/remote/AuthAPIDataSourceImpl";
+import {useStatsViewModel} from "./ViewModel";
+import StatsAPIDataSourceImpl from "../../../data/datasources/stats/remote/StatsAPIDataSource";
+import StatsRepositoryImpl from "../../../data/repositories/StatsRepositoryImpl";
+import GetStatsUseCase from "../../../domain/usecases/stats/GetStatsUseCase";
+import StatsMapper from "../../../data/datasources/stats/remote/StatsMapper";
 
 const data: StatCardProps[] = [
     {
@@ -51,18 +49,15 @@ const data: StatCardProps[] = [
 ];
 
 export default function HomeView() {
-    const moshimoshi =  Config.getInstance().moshimoshi
-    const authDataSource= new AuthAPIDataSourceImpl(moshimoshi)
-    const authRepository = new AuthRepositoryImpl(authDataSource);
-    const loginUseCase = new LoginUseCase(authRepository);
-    const validateEmailUseCase = new ValidateEmailUseCase();
-    const validatePasswordUseCase = new ValidatePasswordUseCase();
+    const moshimoshi = Config.getInstance().moshimoshi;
+    const mapper = new StatsMapper()
+    const statsDataSource = new StatsAPIDataSourceImpl(moshimoshi, mapper);
+    const statsRepository = new StatsRepositoryImpl(statsDataSource);
+    const getStatsUseCase = new GetStatsUseCase(statsRepository);
 
-    const signInViewModel = useSignInViewModel({
-        loginUseCase,
-        validateEmailUseCase,
-        validatePasswordUseCase,
-    });
+    const viewModel = useStatsViewModel(
+        { getStatsUseCase }
+    );
 
     return (
         <Box sx={{ display: 'flex' }}>
