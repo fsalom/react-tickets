@@ -10,24 +10,25 @@ export class Moshimoshi {
     private storage: Storage;
     private loginEndpoint: Endpoint;
     private refreshEndpoint: Endpoint;
+    private logoutEndpoint?: Endpoint;
+    num = 0
 
     private static instance: Moshimoshi;
 
     private constructor(storage: Storage,
                         loginEndpoint: Endpoint,
-                        refreshEndpoint: Endpoint) {
+                        refreshEndpoint: Endpoint,
+                        logoutEndpoint?: Endpoint) {
         this.instance = axios.create();
         this.storage = storage;
-        this.loginEndpoint = loginEndpoint
-        this.refreshEndpoint = refreshEndpoint
+        this.loginEndpoint = loginEndpoint;
+        this.refreshEndpoint = refreshEndpoint;
+        this.logoutEndpoint = logoutEndpoint;
 
         this.instance.interceptors.request.use(
             (value: InternalAxiosRequestConfig<any>) => {
-            console.log('Realizando llamada a la API:');
-            console.log(`URL: ${value.url}`);
-            console.log(`Método: ${value.method}`);
+            console.log(`${value.method} ${value.url}`);
             console.log('Headers:', value.headers);
-            console.log('Parámetros:', value.params);
             console.log('Cuerpo:', value.data);
             return value;
         });
@@ -53,10 +54,10 @@ export class Moshimoshi {
     private async handleResponseError(error: any) {
         if (error.response && error.response.status === 401) {
             console.warn('Token expirado: Intentando renovar el token');
-            const newToken = await this.refreshToken();
-
-            if (newToken) {
-                error.config.headers['Authorization'] = `Bearer ${newToken}`;
+            await this.refreshToken();
+            const accessToken = this.storage.retrieve(TokenType.ACCESS)?.value;
+            if (accessToken) {
+                error.config.headers['Authorization'] = `Bearer ${accessToken}`;
                 return this.instance.request(error.config);
             } else {
                 window.location.href = '/login';
@@ -65,25 +66,16 @@ export class Moshimoshi {
         return Promise.reject(error);
     }
 
-    private async refreshToken() {
-        try {
-            const response = await axios.post(`/auth/refresh`, {
-                refreshToken: this.storage.retrieve(TokenType.REFRESH),
-            });
-            const newToken = response.data.accessToken;
-            this.storage.save(newToken, TokenType.ACCESS)
-            return newToken;
-        } catch (error) {
-            console.error('Error renovando token:', error);
-            return null;
-        }
-    }
-
     async loadAuthorized(endpoint: Endpoint) {
+        console.log("Llamada ejecutada")
+        this.num = this.num + 1
+        console.log(this.num)
         let config = this.buildRequest(endpoint);
-        config = this.authenticate(config);
+        config = await this.authenticate(config);
+        console.log("Autenticado")
         try {
             const response = await this.instance(config);
+            console.log('Response:', response.data);
             return response.data;
         } catch (error) {
             console.error('API call error:', error);
@@ -95,6 +87,7 @@ export class Moshimoshi {
         const config = this.buildRequest(endpoint);
         try {
             const response = await this.instance(config);
+            console.log('Response:', response.data);
             return response.data;
         } catch (error) {
             console.error('API call error:', error);
@@ -102,12 +95,14 @@ export class Moshimoshi {
         }
     }
 
-    async login(data: any) {
-        let config = this.buildRequest(this.loginEndpoint);
-        config.data = data
+    async login(data: any): Promise<void> {
+        this.loginEndpoint.body = {
+            ...this.loginEndpoint.body,
+            ...data
+        };
         try {
-            const response = await this.instance(config);
-            const { access_token, refresh_token, expires_in } = response.data;
+            const response = await this.load(this.loginEndpoint);
+            const { access_token, refresh_token, expires_in } = response;
             const accessToken = new Token(access_token, expires_in);
             const refreshToken = new Token(refresh_token, null);
             this.storage.save(accessToken, TokenType.ACCESS)
@@ -118,8 +113,8 @@ export class Moshimoshi {
         }
     }
 
-    private authenticate(config: AxiosRequestConfig): AxiosRequestConfig {
-        const token = this.getAccessToken()
+    private async authenticate(config: AxiosRequestConfig): Promise<AxiosRequestConfig> {
+        const token = await this.getAccessToken()
         config.headers = {
             ...config.headers,
             Authorization: `Bearer ${token}`,
@@ -152,7 +147,7 @@ export class Moshimoshi {
         return config;
     }
 
-    async getAccessToken(): Promise<string> {
+    async getAccessToken(): Promise<string | undefined> {
         try {
             const accessToken = this.storage.retrieve(TokenType.ACCESS);
             if (accessToken) {
@@ -168,14 +163,35 @@ export class Moshimoshi {
                     }
                 }
             }
-            throw new Error('Access token not found');
+            return accessToken?.value;
         } catch (error) {
-            throw new Error('Access token not found');
-            window.location.href = '/login';
+            return undefined;
+        }
+    }
+
+    private async refreshToken() {
+        this.refreshEndpoint.body = {
+            ...this.refreshEndpoint.body,
+            refreshToken: this.storage.retrieve(TokenType.REFRESH)?.value,
+        };
+        try {
+            const response = await this.load(this.refreshEndpoint);
+            const { access_token, refresh_token, expires_in } = response.data;
+            const accessToken = new Token(access_token, expires_in);
+            const refreshToken = new Token(refresh_token, null);
+            this.storage.save(accessToken, TokenType.ACCESS)
+            this.storage.save(refreshToken, TokenType.REFRESH)
+        } catch (error) {
+            console.error('API call error:', error);
+            throw error;
         }
     }
 
     async logout(): Promise<void> {
+        if (this.logoutEndpoint) {
+            await this.load(this.logoutEndpoint);
+        }
         this.storage.deleteAll()
+        window.location.href = '/login';
     }
 }
