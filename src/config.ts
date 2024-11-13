@@ -15,11 +15,17 @@ export class Config {
         this.storage = new LocalStorageImpl()
         this.loginEndpoint = new Endpoint({
             path: '/api/v1/auth/login/',
-            httpMethod: HTTPMethod.POST
+            httpMethod: HTTPMethod.POST,
+            body: {
+                client_id: "zj4PJ8xg6ZCeonLAKyzBmrZHj7s3KY9tZRP0RSxe"
+            }
         });
         this.refreshEndpoint = new Endpoint({
             path: '/api/v1/auth/refresh/',
             httpMethod: HTTPMethod.POST,
+            body: {
+                client_id: "zj4PJ8xg6ZCeonLAKyzBmrZHj7s3KY9tZRP0RSxe"
+            }
         });
         this.moshimoshi = Moshimoshi.getInstance(
             this.storage,
